@@ -1,0 +1,17 @@
+[package]
+name = "toy_dns_lib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "toy_dns_lib"
+path = "src/lib.rs"
+
+[dependencies]
+rand = "0.8.4"
+rand_chacha = "0.3"
+byteorder = "1"
+log = "0.4"
+env_logger = "0.10"
+chrono = "0.4"
+phf = { version = "0.11.1", features = ["macros"] }

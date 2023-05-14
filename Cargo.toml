@@ -1,0 +1,14 @@
+[package]
+name = "toy_dns"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = ["toy_dns_lib"]
+
+[dependencies]
+toy_dns_lib = { path = "toy_dns_lib" }
+log = "0.4"
+env_logger = "0.10"
+chrono = "0.4"
+clap = { version = "4.3.3", features = ["derive"] }
