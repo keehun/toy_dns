@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/keehun/toy_dns/branch/main/graph/badge.svg?token=EK8CR0KEGJ)](https://codecov.io/gh/keehun/toy_dns)
+[![Unit Tests](https://github.com/keehun/toy_dns/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/keehun/toy_dns/actions/workflows/unit_tests.yml)
+
 # `toy_dns`
 `toy_dns` is a tool I've developed to hone my understanding of how DNS works. It is not (yet) close to being a full-fledged, mature recursive DNS resolver.
 
