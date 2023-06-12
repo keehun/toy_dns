@@ -1,15 +1,31 @@
 use crate::errors::DnsError;
+use std::collections::HashMap;
+use std::net::IpAddr;
+use std::net::Ipv4Addr;
 use std::net::SocketAddr;
 use std::net::UdpSocket;
 
 pub trait Socket<T> {
     /// Bind the socket to the provided address
+    ///
+    /// # Argument
+    /// * `addr`: The (local) address to bind to.
     fn bind(addr: &str) -> Result<T, DnsError>
     where
         Self: Sized;
 
+    /// Send the given buffer to the provided address. Upon success will return the size of the
+    /// sent buffer.
+    ///
+    /// # Arguments
+    /// * `buf`: The buffer to send.
+    /// * `addr`: The address to send `buf` to.
     fn send<'a>(&'a mut self, buf: &'a [u8], addr: &str) -> Result<usize, DnsError>;
 
+    /// Wait for data on the socket. Upon success will return the size of the received data.
+    ///
+    /// # Argument
+    /// * `buf`: The buffer to populate when data is received.
     fn recv_from(&self, buf: &mut [u8]) -> Result<(usize, SocketAddr), DnsError>;
 }
 
@@ -40,10 +56,6 @@ impl Socket<UdpSocket> for UdpSocket {
     }
 }
 
-use std::collections::HashMap;
-use std::net::IpAddr;
-use std::net::Ipv4Addr;
-
 /// Key used to match send calls with the right preconfigured response
 #[derive(Clone, Eq, PartialEq, Hash, Copy)]
 pub struct MockKey<'a> {
@@ -66,10 +78,23 @@ pub struct MockSocket<'a> {
 }
 
 impl<'a> MockSocket<'a> {
+    /// Preconfigure the mock socket with data
+    ///
+    /// # Argument
+    /// * `data`: The data with which to configure the mock socket.
     pub fn register_response_data(&mut self, data: &'a [(MockKey, MockData)]) {
         self.response_data = HashMap::new();
         for (key, value) in data {
             self.response_data.insert(key, value);
+        }
+    }
+}
+
+impl Default for MockSocket<'_> {
+    fn default() -> Self {
+        MockSocket {
+            response_data: HashMap::new(),
+            next_response: None,
         }
     }
 }
@@ -79,11 +104,7 @@ impl Socket<MockSocket<'_>> for MockSocket<'_> {
     where
         Self: Sized,
     {
-        // let static =
-        return Ok(MockSocket {
-            response_data: HashMap::new(),
-            next_response: None,
-        });
+        Ok(MockSocket::default())
     }
 
     fn send<'a>(&'a mut self, buf: &[u8], addr: &'a str) -> Result<usize, DnsError> {
@@ -92,10 +113,13 @@ impl Socket<MockSocket<'_>> for MockSocket<'_> {
             server_ip: addr,
         };
 
+        // Look up the request in the preconfigured data and get the associated response, if any.
         let Some(response) = self.response_data.get(&key) else {
             return Err(DnsError::SocketSend);
         };
 
+        // Next time recv_from() is called on the mock socket, it will return the response from
+        // the lookup above.
         self.next_response = Some(*response);
 
         Ok(buf.len())
